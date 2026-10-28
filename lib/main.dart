@@ -1,3 +1,34 @@
+/*
+PART 1: LIFECYCLE
+
+1. When you first open a page, which lifecycle methods run?
+initState(), didChangeDependencies(), and build() run when a StatefulWidget is first created. initState() runs once for that State object, while didChangeDependencies() and build() may run again later.
+
+2. Which method runs again when you tap the heart button?
+setState() triggers build() to run again and update the UI. initState() does not run again.
+
+3. When you leave a page or press Back, which methods run?
+deactivate() runs when the State object is removed from the widget tree. dispose() runs when the State object is permanently removed. The exact sequence depends on how navigation changes the widget tree.
+
+4. When you resize the browser window, which methods run and why?
+build() runs again when the widget needs to rebuild because the screen dimensions change. didChangeDependencies() can also run again because the widget depends on MediaQuery, which provides the screen dimensions.
+
+
+PART 4: GOROUTER
+
+1. What is the difference between context.go() and context.push()? Give an example of each.
+context.go() navigates to a location and updates the current navigation stack to match that route. context.push() adds a new route on top of the current route.
+Example: context.go('/products') navigates to the products page, while context.push('/details/Luna/85') opens product details on top of the current page.
+
+2. Why do we use go for Login -> Products and push for Product Details?
+We use go for Login -> Products because the user should not return to the login page using the Back button after logging in. We use push for Product Details because the user should be able to return to the products page.
+
+3. What is the difference between path parameters and query parameters? Give an example.
+Path parameters are part of the URL path and identify a specific resource. Query parameters are added after a question mark and provide additional information.
+Example of path parameters: /details/Luna/85, where Luna is the product name and 85 is its price.
+Example of a query parameter: /products?user=Guest, where user identifies the current username.
+*/
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
