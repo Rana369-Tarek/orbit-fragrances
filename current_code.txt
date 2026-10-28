@@ -1,0 +1,2234 @@
+
+
+========== pubspec.yaml ==========
+
+name: orbit_fragrances
+description: "A cosmic luxury fragrance shopping experience."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  go_router: ^17.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+
+
+========== lib\main.dart ==========
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import 'pages/login_page.dart';
+import 'pages/products_page.dart';
+import 'pages/product_details_page.dart';
+
+const Color spaceBlack = Color(0xFF070912);
+const Color spaceNavy = Color(0xFF10182B);
+const Color spaceSurface = Color(0xFF111526);
+const Color cosmicIndigo = Color(0xFF292653);
+const Color nebulaViolet = Color(0xFF7654B8);
+const Color electricLavender = Color(0xFFB6A0FF);
+const Color starlightSilver = Color(0xFFD9E0F2);
+const Color lunarMist = Color(0xFF858BA7);
+const Color orbitGold = Color(0xFFD6B675);
+
+void main() {
+  runApp(const OrbitFragrancesApp());
+}
+
+final GoRouter appRouter = GoRouter(
+  initialLocation: '/',
+  routes: [
+    GoRoute(
+      path: '/',
+      name: 'login',
+      builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/products',
+      name: 'products',
+      builder: (context, state) {
+        final username = state.uri.queryParameters['user'] ?? 'Guest';
+        return ProductsPage(username: username);
+      },
+    ),
+    GoRoute(
+      path: '/details/:name/:price',
+      name: 'details',
+      builder: (context, state) {
+        final name = state.pathParameters['name'] ?? 'Luna';
+        final price =
+            int.tryParse(state.pathParameters['price'] ?? '') ?? 85;
+        
+        return ProductDetailsPage(
+          productName: name,
+          productPrice: price,
+        );
+      },
+    ),
+  ],
+);
+
+class OrbitFragrancesApp extends StatelessWidget {
+  const OrbitFragrancesApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'ORBIT Fragrances',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: spaceBlack,
+        colorScheme: const ColorScheme.dark(
+          primary: nebulaViolet,
+          secondary: electricLavender,
+          surface: spaceSurface,
+          onPrimary: Colors.white,
+          onSurface: starlightSilver,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: spaceBlack,
+          foregroundColor: starlightSilver,
+          elevation: 0,
+          centerTitle: false,
+        ),
+        textTheme: const TextTheme(
+          headlineLarge: TextStyle(
+            color: starlightSilver,
+            fontSize: 34,
+            fontWeight: FontWeight.w300,
+            letterSpacing: 5,
+          ),
+          headlineMedium: TextStyle(
+            color: starlightSilver,
+            fontSize: 25,
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.2,
+          ),
+          titleLarge: TextStyle(
+            color: starlightSilver,
+            fontSize: 18,
+            fontWeight: FontWeight.w500,
+          ),
+          bodyMedium: TextStyle(
+            color: lunarMist,
+            fontSize: 13,
+            height: 1.6,
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: spaceNavy.withValues(alpha: 0.8),
+          hintStyle: const TextStyle(color: lunarMist),
+          prefixIconColor: lunarMist,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 17,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(
+              color: Color(0xFF303956),
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(
+              color: electricLavender,
+              width: 1.3,
+            ),
+          ),
+        ),
+        navigationBarTheme: const NavigationBarThemeData(
+          backgroundColor: Color(0xFF090D1A),
+          indicatorColor: Color(0xFF292044),
+          elevation: 0,
+          labelTextStyle: WidgetStatePropertyAll(
+            TextStyle(fontSize: 11),
+          ),
+        ),
+      ),
+      routerConfig: appRouter,
+    );
+  }
+}
+
+
+========== lib\product_widgets.dart ==========
+
+import 'package:flutter/material.dart';
+
+import 'main.dart';
+
+class ProductsListView extends StatelessWidget {
+  final List<Map<String, dynamic>> products;
+  final VoidCallback onFavoritePressed;
+  final void Function(int index) onProductTap;
+
+  const ProductsListView({
+    super.key,
+    required this.products,
+    required this.onFavoritePressed,
+    required this.onProductTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 28),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 18),
+          child: OrbitProductCard(
+            product: products[index],
+            isWide: false,
+            onFavoritePressed: onFavoritePressed,
+            onTap: () => onProductTap(index),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class ProductsGridView extends StatelessWidget {
+  final List<Map<String, dynamic>> products;
+  final VoidCallback onFavoritePressed;
+  final void Function(int index) onProductTap;
+
+  const ProductsGridView({
+    super.key,
+    required this.products,
+    required this.onFavoritePressed,
+    required this.onProductTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+
+    final columns = width >= 1100
+        ? 4
+        : width >= 800
+            ? 3
+            : 2;
+
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+      itemCount: products.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: 18,
+        mainAxisSpacing: 22,
+        childAspectRatio: 0.69,
+      ),
+      itemBuilder: (context, index) {
+        return OrbitProductCard(
+          product: products[index],
+          isWide: true,
+          onFavoritePressed: onFavoritePressed,
+          onTap: () => onProductTap(index),
+        );
+      },
+    );
+  }
+}
+
+class OrbitProductCard extends StatelessWidget {
+  final Map<String, dynamic> product;
+  final bool isWide;
+  final VoidCallback onFavoritePressed;
+  final VoidCallback onTap;
+
+  const OrbitProductCard({
+    super.key,
+    required this.product,
+    required this.isWide,
+    required this.onFavoritePressed,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final imagePath = product['image'] as String;
+    final name = product['name'] as String;
+    final price = product['price'] as int;
+    final collection = product['collection'] as String? ?? 'ORBIT COLLECTION';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(17),
+        child: Container(
+          decoration: BoxDecoration(
+            color: spaceSurface,
+            borderRadius: BorderRadius.circular(17),
+            border: Border.all(
+              color: const Color(0xFF292E49),
+              width: 0.8,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: isWide
+              ? _buildGridCard(imagePath, name, price, collection)
+              : _buildListCard(imagePath, name, price, collection),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridCard(
+    String imagePath,
+    String name,
+    int price,
+    String collection,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _productImage(imagePath),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x08070912),
+                      Color(0x00070912),
+                      Color(0xCC070912),
+                    ],
+                    stops: [0, 0.55, 1],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: spaceBlack.withValues(alpha: 0.68),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: electricLavender.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Text(
+                    collection.toUpperCase(),
+                    style: const TextStyle(
+                      color: starlightSilver,
+                      fontSize: 8,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: 10,
+                right: 10,
+                child: _favoriteButton(),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(13, 12, 13, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: starlightSilver,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(height: 7),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.auto_awesome,
+                    size: 12,
+                    color: electricLavender,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '\$$price',
+                    style: const TextStyle(
+                      color: orbitGold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Icon(
+                    Icons.arrow_outward,
+                    size: 15,
+                    color: lunarMist,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildListCard(
+    String imagePath,
+    String name,
+    int price,
+    String collection,
+  ) {
+    return SizedBox(
+      height: 148,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 124,
+            height: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                _productImage(imagePath),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.transparent,
+                        Color(0x22070912),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 15, 12, 13),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    collection.toUpperCase(),
+                    style: const TextStyle(
+                      color: electricLavender,
+                      fontSize: 9,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: starlightSilver,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '\$$price',
+                    style: const TextStyle(
+                      color: orbitGold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const Spacer(),
+                  const Row(
+                    children: [
+                      Icon(
+                        Icons.circle,
+                        size: 5,
+                        color: electricLavender,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'DISCOVER THE SCENT',
+                        style: TextStyle(
+                          color: lunarMist,
+                          fontSize: 8,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _favoriteButton(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _productImage(String imagePath) {
+    return Image.asset(
+      imagePath,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: const Color(0xFF10172B),
+          alignment: Alignment.center,
+          child: const Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.image_not_supported_outlined,
+                color: electricLavender,
+                size: 30,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'IMAGE NOT FOUND',
+                style: TextStyle(
+                  color: lunarMist,
+                  fontSize: 9,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _favoriteButton() {
+    return Material(
+      color: spaceBlack.withValues(alpha: 0.78),
+      shape: const CircleBorder(
+        side: BorderSide(color: Color(0x553F4567)),
+      ),
+      child: InkWell(
+        onTap: onFavoritePressed,
+        customBorder: const CircleBorder(),
+        child: const SizedBox(
+          width: 37,
+          height: 37,
+          child: Icon(
+            Icons.favorite_border,
+            color: starlightSilver,
+            size: 18,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+========== lib\pages\login_page.dart ==========
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../main.dart';
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController usernameController =
+      TextEditingController();
+
+  late final AnimationController animationController;
+  late final Animation<double> fadeAnimation;
+  late final Animation<Offset> slideAnimation;
+
+  bool isEntering = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    print('LoginPage: initState');
+
+    animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    );
+
+    fadeAnimation = CurvedAnimation(
+      parent: animationController,
+      curve: Curves.easeOut,
+    );
+
+    slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.07),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    animationController.forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print('LoginPage: didChangeDependencies');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('LoginPage: build');
+
+    final size = MediaQuery.sizeOf(context);
+    final isWideScreen = size.width >= 850;
+
+    return Scaffold(
+      backgroundColor: spaceBlack,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: fadeAnimation,
+          child: SlideTransition(
+            position: slideAnimation,
+            child: isWideScreen
+                ? _buildDesktopLayout(size)
+                : _buildMobileLayout(size),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDesktopLayout(Size size) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1400),
+        child: Padding(
+          padding: const EdgeInsets.all(30),
+          child: Row(
+            children: [
+              Expanded(
+                flex: 6,
+                child: _buildCosmicIntroduction(true),
+              ),
+              const SizedBox(width: 45),
+              Expanded(
+                flex: 4,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 410),
+                    child: _buildLoginForm(true),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMobileLayout(Size size) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(22, 12, 22, 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildBrand(),
+          const SizedBox(height: 22),
+          _buildMobileHero(),
+          const SizedBox(height: 28),
+          _buildLoginForm(false),
+          const SizedBox(height: 30),
+          _buildFooter(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrand() {
+    return Row(
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: electricLavender.withValues(alpha: 0.65),
+            ),
+          ),
+          child: const Icon(
+            Icons.blur_on,
+            color: electricLavender,
+            size: 25,
+          ),
+        ),
+        const SizedBox(width: 12),
+        const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'ORBIT',
+              style: TextStyle(
+                color: starlightSilver,
+                fontSize: 20,
+                fontWeight: FontWeight.w300,
+                letterSpacing: 5,
+              ),
+            ),
+            SizedBox(height: 3),
+            Text(
+              'F R A G R A N C E S',
+              style: TextStyle(
+                color: lunarMist,
+                fontSize: 7,
+                letterSpacing: 2.1,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCosmicIntroduction(bool desktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildBrand(),
+        SizedBox(height: desktop ? 35 : 20),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: SizedBox(
+            height: desktop ? 410 : 270,
+            width: double.infinity,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/orbit.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            spaceBlack,
+                            cosmicIndigo,
+                            spaceNavy,
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Color(0xD9070912),
+                        Color(0x50070912),
+                        Color(0x18070912),
+                      ],
+                    ),
+                  ),
+                ),
+                const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Color(0xD9070912),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 22,
+                  left: 22,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: spaceBlack.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: electricLavender.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.auto_awesome,
+                          color: electricLavender,
+                          size: 13,
+                        ),
+                        SizedBox(width: 7),
+                        Text(
+                          'A NEW SENSORY JOURNEY',
+                          style: TextStyle(
+                            color: starlightSilver,
+                            fontSize: 8,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 24,
+                  right: 20,
+                  bottom: 25,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        desktop
+                            ? 'SCENT FROM\nANOTHER WORLD'
+                            : 'DISCOVER YOUR\nOWN UNIVERSE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: desktop ? 35 : 27,
+                          height: 1.25,
+                          fontWeight: FontWeight.w300,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Fragrances that take you beyond the ordinary.',
+                        style: TextStyle(
+                          color: Color(0xFFD0D1E2),
+                          fontSize: 12,
+                          height: 1.7,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (desktop) ...[
+          const SizedBox(height: 23),
+          const Row(
+            children: [
+              Icon(
+                Icons.circle,
+                size: 6,
+                color: electricLavender,
+              ),
+              SizedBox(width: 10),
+              Text(
+                'A universe of distinctive scents awaits.',
+                style: TextStyle(
+                  color: lunarMist,
+                  fontSize: 12,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMobileHero() {
+    return _buildCosmicIntroduction(false);
+  }
+
+  Widget _buildLoginForm(bool desktop) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          'YOUR JOURNEY STARTS HERE',
+          style: TextStyle(
+            color: electricLavender,
+            fontSize: 9,
+            letterSpacing: 2.5,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Enter your\nuniverse.',
+          style: TextStyle(
+            color: starlightSilver,
+            fontSize: desktop ? 39 : 34,
+            height: 1.2,
+            fontWeight: FontWeight.w300,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 13),
+        const Text(
+          'Discover a fragrance that feels like your own constellation.',
+          style: TextStyle(
+            color: lunarMist,
+            fontSize: 13,
+            height: 1.8,
+          ),
+        ),
+        const SizedBox(height: 32),
+        const Text(
+          'YOUR NAME',
+          style: TextStyle(
+            color: starlightSilver,
+            fontSize: 10,
+            letterSpacing: 1.8,
+          ),
+        ),
+        const SizedBox(height: 11),
+        TextField(
+          controller: usernameController,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (_) => _enterOrbit(),
+          style: const TextStyle(
+            color: starlightSilver,
+            fontSize: 14,
+          ),
+          decoration: const InputDecoration(
+            hintText: 'Enter your name',
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+        ),
+        const SizedBox(height: 22),
+        SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF7654B8),
+                  Color(0xFF493A83),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: nebulaViolet.withValues(alpha: 0.2),
+                  blurRadius: 22,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ElevatedButton(
+              onPressed: isEntering ? null : _enterOrbit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                disabledBackgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+              child: isEntering
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'ENTER ORBIT',
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 2,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Icon(
+                          Icons.arrow_forward,
+                          size: 17,
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 22),
+        Center(
+          child: Text(
+            'A DISTINCTIVE SCENT. YOUR OWN UNIVERSE.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: lunarMist.withValues(alpha: 0.8),
+              fontSize: 8,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        if (desktop) ...[
+          const SizedBox(height: 48),
+          _buildFooter(),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return const Center(
+      child: Text(
+        'ORBIT FRAGRANCES  •  BEYOND THE ORDINARY',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: Color(0xFF666D89),
+          fontSize: 8,
+          letterSpacing: 1.3,
+        ),
+      ),
+    );
+  }
+
+  void _enterOrbit() {
+    if (isEntering) return;
+
+    final username = usernameController.text.trim();
+
+    setState(() {
+      isEntering = true;
+    });
+
+    context.goNamed(
+      'products',
+      queryParameters: {
+        'user': username.isEmpty ? 'Guest' : username,
+      },
+    );
+  }
+
+  @override
+  void deactivate() {
+    print('LoginPage: deactivate');
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    print('LoginPage: dispose');
+    animationController.dispose();
+    usernameController.dispose();
+    super.dispose();
+  }
+}
+
+
+========== lib\pages\products_page.dart ==========
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../main.dart';
+import '../product_widgets.dart';
+
+class ProductsPage extends StatefulWidget {
+  final String username;
+
+  const ProductsPage({
+    super.key,
+    required this.username,
+  });
+
+  @override
+  State<ProductsPage> createState() => _ProductsPageState();
+}
+
+class _ProductsPageState extends State<ProductsPage> {
+  int favoritesCount = 0;
+  String? cartMessage;
+  double screenWidth = 0;
+  double screenHeight = 0;
+
+  final List<Map<String, dynamic>> products = [
+    {
+      'name': 'Luna',
+      'price': 85,
+      'collection': 'LUNAR COLLECTION',
+      'description':
+          'A delicate celestial fragrance inspired by moonlight, fresh air, and quiet nights.',
+      'image': 'assets/images/Luna.jpg',
+      'notes': 'Bergamot, Jasmine, Musk',
+    },
+    {
+      'name': 'Solar Flare',
+      'price': 110,
+      'collection': 'SOLAR COLLECTION',
+      'description':
+          'A radiant fragrance with warm amber tones and the intensity of a distant sun.',
+      'image': 'assets/images/Solar Flare.jpg',
+      'notes': 'Amber, Saffron, Vanilla',
+    },
+    {
+      'name': 'Nebula',
+      'price': 95,
+      'collection': 'GALAXY COLLECTION',
+      'description':
+          'A mysterious blend of floral and woody accords wrapped in a violet cosmic aura.',
+      'image': 'assets/images/Nebula.jpg',
+      'notes': 'Iris, Violet, Sandalwood',
+    },
+    {
+      'name': 'Eclipse',
+      'price': 120,
+      'collection': 'DARK COLLECTION',
+      'description':
+          'A deep, sophisticated fragrance inspired by the silence of a total eclipse.',
+      'image': 'assets/images/Eclipse.jpg',
+      'notes': 'Black Pepper, Cedar, Amber',
+    },
+    {
+      'name': 'Red Planet',
+      'price': 90,
+      'collection': 'SOLAR COLLECTION',
+      'description':
+          'A bold and intense composition with spicy warmth and a distinctive character.',
+      'image': 'assets/images/Red Planet.jpg',
+      'notes': 'Pink Pepper, Cinnamon, Leather',
+    },
+    {
+      'name': 'Starlight',
+      'price': 75,
+      'collection': 'LUNAR COLLECTION',
+      'description':
+          'A luminous, airy fragrance inspired by the first stars appearing at twilight.',
+      'image': 'assets/images/Starlight.jpg',
+      'notes': 'Pear, White Musk, Neroli',
+    },
+    {
+      'name': 'Cosmic Oud',
+      'price': 130,
+      'collection': 'GALAXY COLLECTION',
+      'description':
+          'Rich oud and smoky woods create a bold fragrance with a warm, lasting trail.',
+      'image': 'assets/images/Cosmic Oud.jpg',
+      'notes': 'Oud, Incense, Patchouli',
+    },
+    {
+      'name': 'Midnight Orbit',
+      'price': 105,
+      'collection': 'DARK COLLECTION',
+      'description':
+          'A nocturnal fragrance combining smooth woods with an intimate amber warmth.',
+      'image': 'assets/images/Midnight Orbit.jpg',
+      'notes': 'Amber, Tonka, Vetiver',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    print('ProductsPage: initState');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final size = MediaQuery.sizeOf(context);
+    screenWidth = size.width;
+    screenHeight = size.height;
+
+    print('ProductsPage: didChangeDependencies');
+    print('Screen width: $screenWidth');
+    print('Screen height: $screenHeight');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('ProductsPage: build');
+
+    final isWideScreen = screenWidth >= 600;
+
+    return Scaffold(
+      backgroundColor: spaceBlack,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildTopBar(),
+            Expanded(
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _buildHeroSection(isWideScreen),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _buildCollectionHeading(),
+                  ),
+                  if (cartMessage != null)
+                    SliverToBoxAdapter(
+                      child: _buildCartMessage(),
+                    ),
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'THE COLLECTION',
+                            style: TextStyle(
+                              color: starlightSilver,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 2.2,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${products.length} FRAGRANCES',
+                            style: const TextStyle(
+                              color: lunarMist,
+                              fontSize: 10,
+                              letterSpacing: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: EdgeInsets.zero,
+                    sliver: SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: 0,
+                        width: 0,
+                      ),
+                    ),
+                  ),
+                  if (isWideScreen)
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: screenWidth >= 1100
+                              ? 4
+                              : screenWidth >= 800
+                                  ? 3
+                                  : 2,
+                          crossAxisSpacing: 18,
+                          mainAxisSpacing: 22,
+                          childAspectRatio: 0.69,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return OrbitProductCard(
+                              product: products[index],
+                              isWide: true,
+                              onFavoritePressed: _incrementFavorites,
+                              onTap: () => _openProductDetails(index),
+                            );
+                          },
+                          childCount: products.length,
+                        ),
+                      ),
+                    )
+                  else
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(18, 8, 18, 30),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 18),
+                              child: OrbitProductCard(
+                                product: products[index],
+                                isWide: false,
+                                onFavoritePressed: _incrementFavorites,
+                                onTap: () => _openProductDetails(index),
+                              ),
+                            );
+                          },
+                          childCount: products.length,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: electricLavender.withValues(alpha: 0.65),
+              ),
+            ),
+            child: const Icon(
+              Icons.blur_on,
+              color: electricLavender,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 11),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ORBIT',
+                  style: TextStyle(
+                    color: starlightSilver,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 5,
+                  ),
+                ),
+                Text(
+                  'F R A G R A N C E S',
+                  style: TextStyle(
+                    color: lunarMist,
+                    fontSize: 7,
+                    letterSpacing: 2.1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 11,
+              vertical: 8,
+            ),
+            decoration: BoxDecoration(
+              color: spaceNavy,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF303956),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.favorite_border,
+                  color: electricLavender,
+                  size: 16,
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  'Favorites: $favoritesCount',
+                  style: const TextStyle(
+                    color: starlightSilver,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeroSection(bool isWideScreen) {
+    final heroHeight = isWideScreen ? 300.0 : 260.0;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: SizedBox(
+          height: heroHeight,
+          width: double.infinity,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                'assets/images/Nebula.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          spaceBlack,
+                          cosmicIndigo,
+                          spaceNavy,
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Color(0xF5070912),
+                      Color(0xB8070912),
+                      Color(0x18070912),
+                    ],
+                    stops: [0, 0.54, 1],
+                  ),
+                ),
+              ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Color(0xC8070912),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 22,
+                top: 26,
+                bottom: 24,
+                width: isWideScreen ? 340 : 245,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'THE ART OF',
+                      style: TextStyle(
+                        color: electricLavender,
+                        fontSize: 10,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'SCENT FROM\nANOTHER WORLD',
+                      style: TextStyle(
+                        color: starlightSilver,
+                        fontSize: isWideScreen ? 31 : 25,
+                        height: 1.25,
+                        fontWeight: FontWeight.w300,
+                        letterSpacing: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Discover a universe of extraordinary fragrances.',
+                      style: TextStyle(
+                        color: Color(0xFFD0D1E2),
+                        fontSize: 11,
+                        height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 19),
+                    OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          cartMessage = null;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: starlightSilver,
+                        side: BorderSide(
+                          color: electricLavender.withValues(alpha: 0.8),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 12,
+                        ),
+                        shape: const StadiumBorder(),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'EXPLORE COLLECTION',
+                            style: TextStyle(
+                              fontSize: 9,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                          SizedBox(width: 10),
+                          Icon(
+                            Icons.arrow_forward,
+                            size: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 15,
+                bottom: 13,
+                child: Row(
+                  children: List.generate(
+                    4,
+                    (index) => Container(
+                      margin: const EdgeInsets.only(left: 5),
+                      width: index == 0 ? 17 : 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: index == 0
+                            ? electricLavender
+                            : starlightSilver.withValues(alpha: 0.45),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCollectionHeading() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 21, 20, 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'CURATED FOR YOU',
+                  style: TextStyle(
+                    color: lunarMist,
+                    fontSize: 9,
+                    letterSpacing: 2.2,
+                  ),
+                ),
+                SizedBox(height: 7),
+                Text(
+                  'Featured Fragrances',
+                  style: TextStyle(
+                    color: starlightSilver,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w300,
+                    letterSpacing: 0.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                cartMessage = null;
+              });
+            },
+            child: const Row(
+              children: [
+                Text(
+                  'DISCOVER ALL',
+                  style: TextStyle(
+                    color: electricLavender,
+                    fontSize: 9,
+                    letterSpacing: 1,
+                  ),
+                ),
+                SizedBox(width: 5),
+                Icon(
+                  Icons.arrow_forward,
+                  color: electricLavender,
+                  size: 13,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCartMessage() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF18243A),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: electricLavender.withValues(alpha: 0.35),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: electricLavender,
+              size: 19,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                cartMessage!,
+                style: const TextStyle(
+                  color: starlightSilver,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  cartMessage = null;
+                });
+              },
+              icon: const Icon(
+                Icons.close,
+                size: 17,
+                color: lunarMist,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _incrementFavorites() {
+    setState(() {
+      favoritesCount++;
+    });
+  }
+
+  Future<void> _openProductDetails(int index) async {
+    final product = products[index];
+
+    final result = await context.pushNamed<String>(
+      'details',
+      pathParameters: {
+        'name': product['name'] as String,
+        'price': (product['price'] as int).toString(),
+      },
+      extra: product,
+    );
+
+    if (!mounted) return;
+
+    if (result != null) {
+      setState(() {
+        cartMessage = result;
+      });
+    }
+  }
+
+  @override
+  void deactivate() {
+    print('ProductsPage: deactivate');
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    print('ProductsPage: dispose');
+    super.dispose();
+  }
+}
+
+
+========== lib\pages\product_details_page.dart ==========
+
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+import '../main.dart';
+
+class ProductDetailsPage extends StatefulWidget {
+  final String productName;
+  final int productPrice;
+  final Map<String, dynamic>? product;
+
+  const ProductDetailsPage({
+    super.key,
+    required this.productName,
+    required this.productPrice,
+    this.product,
+  });
+
+  @override
+  State<ProductDetailsPage> createState() => _ProductDetailsPageState();
+}
+
+class _ProductDetailsPageState extends State<ProductDetailsPage> {
+  @override
+  void initState() {
+    super.initState();
+    print('ProductDetailsPage: initState');
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print('ProductDetailsPage: didChangeDependencies');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('ProductDetailsPage: build');
+
+    final product = widget.product ?? <String, dynamic>{};
+
+    final imagePath = product['image'] as String? ??
+        'assets/images/${widget.productName}.jpg';
+
+    final collection =
+        product['collection'] as String? ?? 'ORBIT COLLECTION';
+
+    final description = product['description'] as String? ??
+        'Discover a fragrance inspired by the mysteries of the universe.';
+
+    final notes =
+        (product['notes'] as String? ?? 'Amber, Musk, Woods')
+            .split(', ')
+            .toList();
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isWideScreen = screenWidth >= 700;
+
+    return Scaffold(
+      backgroundColor: spaceBlack,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+                child: Row(
+                  children: [
+                    _roundButton(
+                      icon: Icons.arrow_back,
+                      onTap: () => context.pop(),
+                    ),
+                    const Spacer(),
+                    const Column(
+                      children: [
+                        Text(
+                          'ORBIT',
+                          style: TextStyle(
+                            color: starlightSilver,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w300,
+                            letterSpacing: 5,
+                          ),
+                        ),
+                        Text(
+                          'F R A G R A N C E S',
+                          style: TextStyle(
+                            color: lunarMist,
+                            fontSize: 7,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    _roundButton(
+                      icon: Icons.shopping_bag_outlined,
+                      onTap: () {},
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1050),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: isWideScreen
+                        ? _buildWideLayout(
+                            imagePath,
+                            collection,
+                            description,
+                            notes,
+                          )
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildProductImage(imagePath, 390),
+                              const SizedBox(height: 26),
+                              _buildProductInformation(
+                                collection,
+                                description,
+                                notes,
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 35),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWideLayout(
+    String imagePath,
+    String collection,
+    String description,
+    List<String> notes,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 6,
+          child: _buildProductImage(imagePath, 580),
+        ),
+        const SizedBox(width: 42),
+        Expanded(
+          flex: 5,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 38),
+            child: _buildProductInformation(
+              collection,
+              description,
+              notes,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProductImage(String imagePath, double height) {
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: spaceNavy,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: electricLavender.withValues(alpha: 0.25),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: nebulaViolet.withValues(alpha: 0.12),
+            blurRadius: 35,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(
+                  Icons.image_not_supported_outlined,
+                  color: electricLavender,
+                  size: 42,
+                ),
+              );
+            },
+          ),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x12070912),
+                  Colors.transparent,
+                  Color(0xB8070912),
+                ],
+                stops: [0, 0.5, 1],
+              ),
+            ),
+          ),
+          Positioned(
+            left: 17,
+            top: 17,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: spaceBlack.withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: electricLavender.withValues(alpha: 0.4),
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    color: electricLavender,
+                    size: 13,
+                  ),
+                  SizedBox(width: 7),
+                  Text(
+                    'THE ORBIT EDITION',
+                    style: TextStyle(
+                      color: starlightSilver,
+                      fontSize: 9,
+                      letterSpacing: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 18,
+            left: 18,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.productName.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    letterSpacing: 3,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  'SCENTS FOR A HIGHER REALM',
+                  style: TextStyle(
+                    color: starlightSilver,
+                    fontSize: 8,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductInformation(
+    String collection,
+    String description,
+    List<String> notes,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          collection.toUpperCase(),
+          style: const TextStyle(
+            color: electricLavender,
+            fontSize: 10,
+            letterSpacing: 2.5,
+          ),
+        ),
+        const SizedBox(height: 14),
+        Text(
+          widget.productName,
+          style: const TextStyle(
+            color: starlightSilver,
+            fontSize: 37,
+            height: 1.1,
+            fontWeight: FontWeight.w300,
+            letterSpacing: 1.3,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Text(
+          'A universe within every drop.',
+          style: TextStyle(
+            color: lunarMist,
+            fontSize: 13,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 23),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              '\$${widget.productPrice}',
+              style: const TextStyle(
+                color: orbitGold,
+                fontSize: 29,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 9,
+                vertical: 5,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFF18243A),
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: const Text(
+                'ORBIT EXCLUSIVE',
+                style: TextStyle(
+                  color: starlightSilver,
+                  fontSize: 8,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 25),
+        Container(
+          height: 1,
+          color: const Color(0xFF252B43),
+        ),
+        const SizedBox(height: 23),
+        const Text(
+          'THE FRAGRANCE',
+          style: TextStyle(
+            color: starlightSilver,
+            fontSize: 11,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          description,
+          style: const TextStyle(
+            color: lunarMist,
+            fontSize: 13,
+            height: 1.9,
+          ),
+        ),
+        const SizedBox(height: 28),
+        const Text(
+          'FRAGRANCE NOTES',
+          style: TextStyle(
+            color: starlightSilver,
+            fontSize: 11,
+            letterSpacing: 2,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 9,
+          runSpacing: 9,
+          children: notes.map((note) {
+            return Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 13,
+                vertical: 10,
+              ),
+              decoration: BoxDecoration(
+                color: spaceNavy,
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: const Color(0xFF303956),
+                ),
+              ),
+              child: Text(
+                note.trim(),
+                style: const TextStyle(
+                  color: starlightSilver,
+                  fontSize: 11,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 34),
+        SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  nebulaViolet,
+                  Color(0xFF493A83),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: nebulaViolet.withValues(alpha: 0.22),
+                  blurRadius: 20,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                context.pop(
+                  '${widget.productName} added to cart',
+                );
+              },
+              icon: const Icon(
+                Icons.shopping_bag_outlined,
+                size: 18,
+              ),
+              label: const Text(
+                'ADD TO CART',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 2,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Center(
+          child: Text(
+            'A DISTINCTIVE SCENT. AN UNFORGETTABLE JOURNEY.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: lunarMist,
+              fontSize: 8,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _roundButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: spaceNavy,
+      shape: const CircleBorder(
+        side: BorderSide(
+          color: Color(0xFF303956),
+        ),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: SizedBox(
+          width: 42,
+          height: 42,
+          child: Icon(
+            icon,
+            color: starlightSilver,
+            size: 19,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  void deactivate() {
+    print('ProductDetailsPage: deactivate');
+    super.deactivate();
+  }
+
+  @override
+  void dispose() {
+    print('ProductDetailsPage: dispose');
+    super.dispose();
+  }
+}
