@@ -78,7 +78,7 @@ The project focuses on visual identity, reusable interface components, structure
 ---
 
 ## ◈ Screenshots
-![alt text](image-2.png)
+![alt text](img.jpg)
 ### Adding Your Screenshots
 
 Create a folder named `screenshots` in the project root:
