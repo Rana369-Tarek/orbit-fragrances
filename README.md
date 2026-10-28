@@ -1,7 +1,7 @@
 <div align="center">
 
 # ✦ ORBIT FRAGRANCES
-![alt text](image-1.png)
+![alt text](image.jpg)
 ### A Universe of Scents. A Signature of Your Own.
 
 *Explore beyond the ordinary. Discover your orbit.*
